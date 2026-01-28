@@ -1,7 +1,7 @@
 // src/app/api/posts/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, db } from '@/lib/firebase-admin';
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
+import { auth } from '@/lib/firebase-admin';
+import { getFirestore, addDoc, collection, Timestamp } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
 
     // 6. Guardar en Firestore
     console.log('Guardando en Firestore...');
-    const postsRef = collection(db, 'posts');
+    const firestore = getFirestore();
+    const postsRef = collection(firestore, 'posts');
     await addDoc(postsRef, {
       title,
       content,

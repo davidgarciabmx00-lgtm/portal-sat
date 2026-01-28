@@ -1,7 +1,7 @@
 // src/app/api/posts/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, db } from '@/lib/firebase-admin';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { auth } from '@/lib/firebase-admin';
+import { getFirestore, doc, deleteDoc } from 'firebase/firestore';
 
 export async function DELETE(
   request: NextRequest,
@@ -29,7 +29,8 @@ export async function DELETE(
 
     // 4. Eliminar el post de Firestore
     console.log('Eliminando post de Firestore...');
-    const postRef = doc(db, 'posts', id);
+    const firestore = getFirestore();
+    const postRef = doc(firestore, 'posts', id);
     await deleteDoc(postRef);
 
     console.log('✅ Post eliminado exitosamente');
