@@ -1,4 +1,4 @@
-// src/lib/firebase-admin.ts
+// src/lib/firebase-admin.ts - Updated for Vercel deployment
 import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
