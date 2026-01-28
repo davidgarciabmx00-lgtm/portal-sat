@@ -110,9 +110,9 @@ const PostList: React.FC = () => {
               </svg>
             </button>
           )}
-          <div className="flex items-start justify-between mb-3">
-            <h3 className="text-xl font-bold text-gray-900 pr-8">{post.title}</h3>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${CATEGORY_STYLES[post.category]?.color || CATEGORY_STYLES.general.color}`}>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-2">
+            <h3 className="text-lg md:text-xl font-bold text-gray-900 pr-8">{post.title}</h3>
+            <span className={`px-3 py-1 rounded-full text-sm font-medium self-start ${CATEGORY_STYLES[post.category]?.color || CATEGORY_STYLES.general.color}`}>
               {CATEGORY_STYLES[post.category]?.label || CATEGORY_STYLES.general.label}
             </span>
           </div>
@@ -120,7 +120,7 @@ const PostList: React.FC = () => {
             <img src={post.imageUrl} alt={post.title} className="w-full h-48 object-cover rounded-lg mb-4" />
           )}
           <p className="text-gray-700 mb-4 leading-relaxed">{post.content}</p>
-          <div className="flex items-center justify-between text-sm text-gray-500">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500 gap-2">
             <span>Por <strong>{post.author}</strong></span>
             <span>{formatDate(post.createdAt)}</span>
           </div>

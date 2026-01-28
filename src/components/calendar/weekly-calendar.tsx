@@ -143,43 +143,46 @@ const WeeklyCalendar = ({ tasks, onWeekChange, onTaskDeleted }: WeeklyCalendarPr
   return (
     <>
       <div className="bg-white p-4 rounded-lg shadow">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
           <h3 className="text-lg font-semibold text-black">Planificación Semanal</h3>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={goToPreviousWeek}
-              className="px-3 py-1 bg-gray-200 text-black rounded hover:bg-gray-300"
+              className="px-2 py-1 md:px-3 text-sm bg-gray-200 text-black rounded hover:bg-gray-300"
             >
-              ← Semana Anterior
+              <span className="hidden sm:inline">← Semana Anterior</span>
+              <span className="sm:hidden">←</span>
             </button>
             <button
               onClick={goToCurrentWeek}
-              className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="px-2 py-1 md:px-3 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Esta Semana
+              <span className="hidden sm:inline">Esta Semana</span>
+              <span className="sm:hidden">Hoy</span>
             </button>
             <button
               onClick={goToNextWeek}
-              className="px-3 py-1 bg-gray-200 text-black rounded hover:bg-gray-300"
+              className="px-2 py-1 md:px-3 text-sm bg-gray-200 text-black rounded hover:bg-gray-300"
             >
-              Semana Siguiente →
+              <span className="hidden sm:inline">Semana Siguiente →</span>
+              <span className="sm:hidden">→</span>
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-2 text-center text-xs font-medium text-gray-700">
+        <div className="grid grid-cols-7 gap-1 md:gap-2 text-center text-xs font-medium text-gray-700">
           {weekDays.map(day => (
-            <div key={day.toString()} className="p-2 border rounded">
-              <div>{format(day, 'EEE', { locale: es })}</div>
-              <div className={`text-lg ${format(new Date(), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd') ? 'bg-blue-500 text-white rounded-full w-7 h-7 mx-auto flex items-center justify-center' : ''}`}>
+            <div key={day.toString()} className="p-1 md:p-2 border rounded">
+              <div className="hidden sm:block">{format(day, 'EEE', { locale: es })}</div>
+              <div className={`text-sm md:text-lg ${format(new Date(), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd') ? 'bg-blue-500 text-white rounded-full w-6 h-6 md:w-7 md:h-7 mx-auto flex items-center justify-center' : ''}`}>
                 {format(day, 'd')}
               </div>
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-2 mt-2">
+        <div className="grid grid-cols-7 gap-1 md:gap-2 mt-2">
           {weekDays.map(day => (
-            <div key={day.toString()} className="border rounded p-2 h-64 overflow-y-auto text-xs">
+            <div key={day.toString()} className="border rounded p-1 md:p-2 h-32 md:h-64 overflow-y-auto text-xs">
               {renderTasksForDay(day)}
             </div>
           ))}

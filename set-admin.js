@@ -1,16 +1,18 @@
 // set-admin.js
 const admin = require('firebase-admin');
+const fs = require('fs');
+const path = require('path');
 
 // Para desarrollo local: usar el archivo service-account-key.json
 // Para producción: configurar variables de entorno
 let serviceAccount;
 
 try {
-  // Intentar cargar desde archivo local
-  serviceAccount = require('./service-account-key.json');
-} catch (error) {
-  // Si no existe el archivo, usar variables de entorno
-  if (process.env.FIREBASE_PROJECT_ID) {
+  // Solo intentar cargar desde archivo local si estamos en desarrollo
+  if (process.env.NODE_ENV !== 'production' && fs.existsSync(path.join(__dirname, 'service-account-key.json'))) {
+    serviceAccount = require('./service-account-key.json');
+  } else if (process.env.FIREBASE_PROJECT_ID) {
+    // Usar variables de entorno
     serviceAccount = {
       type: "service_account",
       project_id: process.env.FIREBASE_PROJECT_ID,
@@ -24,11 +26,14 @@ try {
       client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
     };
   } else {
-    console.error('Error: No se encontró service-account-key.json ni variables de entorno de Firebase.');
-    console.error('Descarga la clave de servicio desde Firebase Console y colócala en la raíz del proyecto,');
-    console.error('o configura las variables de entorno FIREBASE_PROJECT_ID, etc.');
+    console.error('Error: No se encontró configuración de Firebase.');
+    console.error('Para desarrollo: descarga service-account-key.json desde Firebase Console');
+    console.error('Para producción: configura las variables de entorno FIREBASE_PROJECT_ID, etc.');
     process.exit(1);
   }
+} catch (error) {
+  console.error('Error al cargar configuración de Firebase:', error.message);
+  process.exit(1);
 }
 
 admin.initializeApp({

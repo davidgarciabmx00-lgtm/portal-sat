@@ -222,9 +222,9 @@ const Topbar: React.FC = () => {
 
   return (
     <>
-    <header className="bg-white shadow-md px-4 md:px-6 py-3 flex justify-between items-center relative border-b border-gray-200">
-      <div className="flex items-center space-x-4">
-        <div className="relative w-full md:w-96">
+    <header className="bg-white shadow-md px-4 md:px-6 py-3 flex flex-col md:flex-row justify-between items-start md:items-center relative border-b border-gray-200 gap-3 md:gap-0">
+      <div className="flex items-center space-x-4 w-full md:w-auto">
+        <div className="relative flex-1 md:flex-initial md:w-96">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -327,18 +327,19 @@ const Topbar: React.FC = () => {
         </div>
       </div>
       
-      <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
         {userRole === 'admin' && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl hover:shadow-indigo-500/25 transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/50 overflow-hidden"
+            className="group relative inline-flex items-center px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl hover:shadow-indigo-500/25 transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/50 overflow-hidden text-sm md:text-base"
           >
             {/* Efecto de brillo */}
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
 
             {/* Texto */}
             <span className="relative z-10 tracking-wide">
-              Añadir Publicación
+              <span className="hidden sm:inline">Añadir Publicación</span>
+              <span className="sm:hidden">Añadir</span>
             </span>
 
             {/* Efecto de borde brillante */}
@@ -349,14 +350,15 @@ const Topbar: React.FC = () => {
         {user && (
           <Link href="/calendar">
             <button
-              className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-500/50 overflow-hidden"
+              className="group relative inline-flex items-center px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-500/50 overflow-hidden text-sm md:text-base"
             >
               {/* Efecto de brillo */}
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
 
               {/* Texto */}
               <span className="relative z-10 tracking-wide">
-                Ver Calendario
+                <span className="hidden sm:inline">Ver Calendario</span>
+                <span className="sm:hidden">Calendario</span>
               </span>
 
               {/* Efecto de borde brillante */}
@@ -373,8 +375,9 @@ const Topbar: React.FC = () => {
               </div>
               <span className="hidden lg:block">{user.email}</span>
             </div>
-            <Button onClick={handleLogout} variant="secondary">
-              Cerrar Sesión
+            <Button onClick={handleLogout} variant="secondary" className="text-sm px-3 py-2">
+              <span className="hidden sm:inline">Cerrar Sesión</span>
+              <span className="sm:hidden">Salir</span>
             </Button>
           </>
         )}
