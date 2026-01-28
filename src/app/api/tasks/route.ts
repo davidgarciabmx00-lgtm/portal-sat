@@ -1,7 +1,6 @@
 // src/app/api/tasks/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, db } from '@/lib/firebase-admin';
-import { collection, getDocs, addDoc, query, where, Timestamp } from 'firebase/firestore';
 import { startOfWeek, endOfWeek } from 'date-fns';
 
 interface Task {
