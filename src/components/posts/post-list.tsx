@@ -2,11 +2,26 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ref, get, query, orderByChild, limitToLast } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy, where, Timestamp } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+import { initializeApp } from 'firebase/app';
 import { Post, PostCategory } from '@/types/post';
 import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDLK0kYtulUzvkPsV1rAmEWtOI1_rQxDbE",
+  authDomain: "soporte-sat.firebaseapp.com",
+  projectId: "soporte-sat",
+  storageBucket: "soporte-sat.firebasestorage.app",
+  messagingSenderId: "1058754500488",
+  appId: "1:1058754500488:web:a8040573120a5466620c3d",
+  measurementId: "G-LYK134PVPJ",
+  databaseURL: "https://soporte-sat-default-rtdb.europe-west1.firebasedatabase.app/"
+};
+
+const app = initializeApp(firebaseConfig);
+const firestore = getFirestore(app);
 
 const CATEGORY_STYLES: Record<PostCategory, { label: string; color: string }> = {
   urgente: { label: '🔴 Urgente', color: 'bg-red-100 text-red-800' },
@@ -19,6 +34,36 @@ const CATEGORY_STYLES: Record<PostCategory, { label: string; color: string }> = 
 const PostList: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const { user, userRole } = useAuth();
+
+  const fetchPosts = async () => {
+    const now = Timestamp.now();
+
+    try {
+      const postsRef = collection(firestore, 'posts');
+      // Obtener posts que no han expirado
+      const q = query(postsRef, where('expiresAt', '>', now), orderBy('expiresAt', 'desc'));
+      const snapshot = await getDocs(q);
+
+      const postsData: Post[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        postsData.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+          expiresAt: data.expiresAt?.toDate ? data.expiresAt.toDate() : new Date(data.expiresAt),
+        } as Post);
+      });
+
+      setPosts(postsData);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   const handleDeletePost = async (postId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
@@ -49,42 +94,6 @@ const PostList: React.FC = () => {
       alert('Error al eliminar la publicación');
     }
   };
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      const now = new Date().getTime();
-
-      try {
-        const postsRef = ref(db, 'posts');
-        const snapshot = await get(postsRef);
-
-        if (snapshot.exists()) {
-          const postsData: any[] = [];
-          snapshot.forEach((childSnapshot) => {
-            const post = {
-              id: childSnapshot.key,
-              ...childSnapshot.val(),
-              createdAt: new Date(childSnapshot.val().createdAt),
-              expiresAt: new Date(childSnapshot.val().expiresAt),
-            };
-
-            // Filtrar posts expirados
-            if (post.expiresAt.getTime() > now) {
-              postsData.push(post);
-            }
-          });
-
-          // Ordenar por fecha de expiración descendente
-          postsData.sort((a, b) => b.expiresAt.getTime() - a.expiresAt.getTime());
-          setPosts(postsData);
-        }
-      } catch (error) {
-        console.error('Error fetching posts:', error);
-      }
-    };
-
-    fetchPosts();
-  }, []);
 
   return (
     <div className="space-y-4">
