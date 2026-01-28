@@ -1,23 +1,6 @@
 // src/app/api/posts/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import admin from 'firebase-admin';
-
-export async function POST(request: NextRequest) {
-  try {
-    console.log('🔍 Iniciando creación de post...');
-
-    // Inicializar Firebase Admin si no está hecho
-    if (!admin.apps.length) {
-      console.log('Inicializando Firebase Admin...');
-      const serviceAccount = require('../../../../service-account-key.json');
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        databaseURL: 'https://soporte-sat-default-rtdb.europe-west1.firebasedatabase.app/',
-      });
-      console.log('✅ Firebase Admin inicializado');
-    }
-
-    const auth = admin.auth();
+import { auth, db } from '@/lib/firebase-admin';
     const db = admin.database();
 
     // 1. Obtener el token de autorización del header

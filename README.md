@@ -79,6 +79,50 @@ node set-admin.js
 npm run dev
 ```
 
+## 🚀 Despliegue en Vercel
+
+### 1. Configuración de Variables de Entorno en Vercel
+
+Ve al dashboard de Vercel y configura las siguientes variables de entorno en **Project Settings > Environment Variables**:
+
+#### Variables Públicas (NEXT_PUBLIC_*)
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=tu_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu_proyecto.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tu_proyecto.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=tu_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=tu_app_id
+```
+
+#### Variables del Servidor (Firebase Admin)
+```
+FIREBASE_PROJECT_ID=tu_project_id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\ntu_private_key_aqui\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@tu_proyecto.iam.gserviceaccount.com
+FIREBASE_DATABASE_URL=https://tu_proyecto-default-rtdb.firebaseio.com/
+```
+
+### 2. Despliegue Automático
+
+1. Conecta tu repositorio de GitHub a Vercel
+2. Vercel detectará automáticamente la configuración de Next.js
+3. El build debería completarse exitosamente con las variables de entorno configuradas
+
+### 3. Solución de Problemas Comunes
+
+- **Error de Firebase Admin**: Asegúrate de que todas las variables `FIREBASE_*` estén configuradas correctamente
+- **Error de Build**: Verifica que el archivo `service-account-key.json` esté en `.gitignore` (no debe subirse a GitHub)
+- **Error de Runtime**: Revisa los logs de Vercel para errores específicos de Firebase
+
+### 4. Verificación del Despliegue
+
+Después del despliegue, verifica que:
+- La autenticación funciona correctamente
+- Las APIs responden correctamente
+- El calendario carga las tareas
+- Los administradores pueden gestionar usuarios
+
 Abre [http://localhost:3000](http://localhost:3000) - serás redirigido automáticamente al login.
 
 ## 🚀 Despliegue en Vercel

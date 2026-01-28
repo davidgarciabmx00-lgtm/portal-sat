@@ -1,22 +1,6 @@
 // src/app/api/admin/users/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import admin from 'firebase-admin';
-
-// Inicializar Firebase Admin SDK
-if (!admin.apps.length) {
-  try {
-    const serviceAccount = require('../../../../../service-account-key.json');
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      storageBucket: 'soporte-sat.appspot.com',
-    });
-    console.log('✅ Firebase Admin inicializado correctamente');
-  } catch (error) {
-    console.error('❌ Error al inicializar Firebase Admin:', error);
-  }
-}
-
-const auth = admin.apps.length > 0 ? admin.auth() : null;
+import { auth } from '@/lib/firebase-admin';
 
 export async function GET() {
   try {

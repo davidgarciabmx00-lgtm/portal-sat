@@ -1,23 +1,6 @@
 // src/app/api/posts/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import admin from 'firebase-admin';
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    console.log('🔍 Eliminando post con ID:', id);
-
-    // Inicializar Firebase Admin si no está hecho
-    if (!admin.apps.length) {
-      console.log('Inicializando Firebase Admin...');
-      const serviceAccount = require('../../../../../service-account-key.json');
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        databaseURL: 'https://soporte-sat-default-rtdb.europe-west1.firebasedatabase.app/',
-      });
+import { auth, db } from '@/lib/firebase-admin';
       console.log('✅ Firebase Admin inicializado');
     }
 
