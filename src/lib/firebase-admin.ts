@@ -5,7 +5,7 @@ if (!admin.apps.length) {
   try {
     console.log('🔧 Inicializando Firebase Admin...');
 
-    // Intentar inicializar con variables de entorno (Vercel)
+    // Usar variables de entorno (requerido para producción)
     if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
       console.log('🔧 Inicializando con variables de entorno...');
       admin.initializeApp({
@@ -17,13 +17,7 @@ if (!admin.apps.length) {
         databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://portal-soporte-sat-default-rtdb.firebaseio.com/',
       });
     } else {
-      // Fallback para desarrollo local
-      console.log('🔧 Inicializando con archivo service-account-key.json...');
-      const serviceAccount = require('../../service-account-key.json');
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        databaseURL: 'https://portal-soporte-sat-default-rtdb.firebaseio.com/',
-      });
+      throw new Error('Firebase Admin credentials not found. Please set FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL environment variables.');
     }
 
     console.log('✅ Firebase Admin inicializado correctamente');
