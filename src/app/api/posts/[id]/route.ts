@@ -1,11 +1,15 @@
 // src/app/api/posts/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, db } from '@/lib/firebase-admin';
-      console.log('✅ Firebase Admin inicializado');
-    }
+import { doc, deleteDoc } from 'firebase/firestore';
 
-    const auth = admin.auth();
-    const db = admin.database();
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    console.log('🔍 Eliminando post con ID:', id);
 
     // 1. Obtener el token de autorización del header
     const authorization = request.headers.get('Authorization');
@@ -23,10 +27,10 @@ import { auth, db } from '@/lib/firebase-admin';
       return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 });
     }
 
-    // 4. Eliminar el post de Realtime Database
-    console.log('Eliminando post de Realtime Database...');
-    const postRef = db.ref(`posts/${id}`);
-    await postRef.remove();
+    // 4. Eliminar el post de Firestore
+    console.log('Eliminando post de Firestore...');
+    const postRef = doc(db, 'posts', id);
+    await deleteDoc(postRef);
 
     console.log('✅ Post eliminado exitosamente');
     return NextResponse.json({ message: 'Post eliminado exitosamente' }, { status: 200 });

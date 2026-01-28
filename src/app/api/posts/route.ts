@@ -1,7 +1,11 @@
 // src/app/api/posts/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, db } from '@/lib/firebase-admin';
-    const db = admin.database();
+import { addDoc, collection, Timestamp } from 'firebase/firestore';
+
+export async function POST(request: NextRequest) {
+  try {
+    console.log('🔍 Iniciando creación de post...');
 
     // 1. Obtener el token de autorización del header
     const authorization = request.headers.get('Authorization');
@@ -26,20 +30,19 @@ import { auth, db } from '@/lib/firebase-admin';
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + duration);
 
-    // 6. Guardar en Realtime Database
-    console.log('Guardando en Realtime Database...');
-    const postsRef = db.ref('posts');
-    const newPostRef = postsRef.push();
-    await newPostRef.set({
+    // 6. Guardar en Firestore
+    console.log('Guardando en Firestore...');
+    const postsRef = collection(db, 'posts');
+    await addDoc(postsRef, {
       title,
       content,
       category,
       author: decodedToken.email,
       authorEmail: decodedToken.email,
-      createdAt: admin.database.ServerValue.TIMESTAMP,
+      createdAt: Timestamp.now(),
       imageUrl: null, // Por ahora sin imagen
       duration,
-      expiresAt: expiresAt.getTime(),
+      expiresAt: Timestamp.fromDate(expiresAt),
     });
 
     console.log('✅ Post guardado exitosamente');
