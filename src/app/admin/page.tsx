@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/button';
 import TechnicianManager from '@/components/admin/technician-manager';
+import BookingsManager from '@/components/admin/bookings-manager';
 
 interface User {
   uid: string;
@@ -20,6 +21,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'admin')) {
@@ -32,13 +34,34 @@ export default function AdminPage() {
     }
   }, [user, userRole, loading, router]);
 
+  const copyBookingLink = async () => {
+    const bookingUrl = `${window.location.origin}/booking`;
+    try {
+      await navigator.clipboard.writeText(bookingUrl);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Error al copiar:', err);
+      alert('Error al copiar el enlace');
+    }
+  };
+
   const fetchUsers = async () => {
+    if (!user) return;
+    
     setLoadingUsers(true);
     try {
-      const response = await fetch('/api/admin/users');
+      const token = await user.getIdToken();
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users);
+      } else {
+        console.error('Error fetching users:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -87,9 +110,33 @@ export default function AdminPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-black">Panel de Administración</h1>
-        <Button onClick={() => router.push('/')} variant="secondary">
-          ← Volver al Dashboard
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            onClick={copyBookingLink}
+            className={`transition-all ${copySuccess ? 'bg-green-600 hover:bg-green-700' : ''}`}
+          >
+            {copySuccess ? '✓ Link Copiado!' : '📋 Copiar Link de Reservas'}
+          </Button>
+          <Button onClick={() => router.push('/')} variant="secondary">
+            ← Volver al Dashboard
+          </Button>
+        </div>
+      </div>
+
+      {/* Mensaje informativo del link */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">ℹ️</span>
+          <div>
+            <p className="font-semibold text-blue-900">Link de Reservas Públicas</p>
+            <p className="text-sm text-blue-800 mt-1">
+              Comparte este link con tus clientes para que puedan reservar citas directamente: 
+              <span className="font-mono bg-white px-2 py-1 rounded ml-2 text-blue-600">
+                {typeof window !== 'undefined' ? `${window.location.origin}/booking` : '/booking'}
+              </span>
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
@@ -154,6 +201,10 @@ export default function AdminPage() {
         )}
       </div>
 
+      {/* Gestión de Reservas Públicas */}
+      <BookingsManager />
+
+      {/* Gestión de Técnicos */}
       <TechnicianManager />
     </div>
   );

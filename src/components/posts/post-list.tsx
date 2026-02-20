@@ -3,25 +3,10 @@
 
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, where, Timestamp } from 'firebase/firestore';
-import { getFirestore } from 'firebase/firestore';
-import { initializeApp } from 'firebase/app';
+import { db } from '@/lib/firebase';
 import { Post, PostCategory } from '@/types/post';
 import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDLK0kYtulUzvkPsV1rAmEWtOI1_rQxDbE",
-  authDomain: "soporte-sat.firebaseapp.com",
-  projectId: "soporte-sat",
-  storageBucket: "soporte-sat.firebasestorage.app",
-  messagingSenderId: "1058754500488",
-  appId: "1:1058754500488:web:a8040573120a5466620c3d",
-  measurementId: "G-LYK134PVPJ",
-  databaseURL: "https://soporte-sat-default-rtdb.europe-west1.firebasedatabase.app/"
-};
-
-const app = initializeApp(firebaseConfig);
-const firestore = getFirestore(app);
 
 const CATEGORY_STYLES: Record<PostCategory, { label: string; color: string }> = {
   urgente: { label: '🔴 Urgente', color: 'bg-red-100 text-red-800' },
@@ -39,7 +24,7 @@ const PostList: React.FC = () => {
     const now = Timestamp.now();
 
     try {
-      const postsRef = collection(firestore, 'posts');
+      const postsRef = collection(db, 'posts');
       // Obtener posts que no han expirado
       const q = query(postsRef, where('expiresAt', '>', now), orderBy('expiresAt', 'desc'));
       const snapshot = await getDocs(q);

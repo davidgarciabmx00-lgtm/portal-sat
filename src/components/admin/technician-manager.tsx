@@ -18,15 +18,26 @@ const TechnicianManager = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchTechnicians();
-  }, []);
+    if (user) {
+      fetchTechnicians();
+    }
+  }, [user]);
 
   const fetchTechnicians = async () => {
+    if (!user) return;
+    
     try {
-      const response = await fetch('/api/technicians');
+      const token = await user.getIdToken();
+      const response = await fetch('/api/technicians', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setTechnicians(data);
+      } else {
+        console.error('Error fetching technicians:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching technicians:', error);

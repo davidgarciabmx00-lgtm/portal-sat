@@ -1,0 +1,67 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function: verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function: verificar si el usuario es admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Regla para la colección 'users'
+    match /users/{userId} {
+      // Solo admins pueden leer todos los usuarios
+      allow read: if isAdmin();
+      // Los usuarios pueden leer su propia información
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Solo admins pueden crear, actualizar o eliminar usuarios
+      allow write: if isAdmin();
+    }
+    
+    // Regla para la colección 'technicians'
+    match /technicians/{technicianId} {
+      // Cualquier usuario autenticado puede leer técnicos
+      allow read: if isAuthenticated();
+      // Solo admins pueden crear, actualizar o eliminar técnicos
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Regla para la colección 'tasks'
+    match /tasks/{taskId} {
+      // Cualquier usuario autenticado puede leer tareas
+      allow read: if isAuthenticated();
+      // Solo admins pueden crear, actualizar o eliminar tareas
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Regla para la colección 'posts'
+    match /posts/{postId} {
+      // Cualquier usuario autenticado puede leer posts
+      allow read: if isAuthenticated();
+      // Solo admins pueden crear, actualizar o eliminar posts
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Regla para la colección 'bookings' (reservas públicas)
+    match /bookings/{bookingId} {
+      // Solo admins pueden leer todas las reservas
+      allow read: if isAdmin();
+      // Permitir crear reservas sin autenticación (desde API pública)
+      // La validación se hace en el backend
+      allow create: if true;
+      // Solo admins pueden actualizar o eliminar
+      allow update, delete: if isAdmin();
+    }
+    
+    // Denegar acceso a todo lo demás por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

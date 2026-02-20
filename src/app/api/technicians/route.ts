@@ -2,8 +2,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, db } from '@/lib/firebase-admin';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Verificar autenticación
+    const authorization = request.headers.get('Authorization');
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const idToken = authorization.split('Bearer ')[1];
+    await auth.verifyIdToken(idToken); // Verificar que el token sea válido
+
     const techniciansRef = db.collection('technicians');
     const snapshot = await techniciansRef.get();
 

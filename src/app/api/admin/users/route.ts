@@ -2,12 +2,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase-admin';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     if (!auth) {
       return NextResponse.json({
         error: 'Firebase Admin not initialized. Please configure Firebase Admin credentials. For development, download service-account-key.json from Firebase Console and place it in the project root, or set FIREBASE_PROJECT_ID and other environment variables.'
       }, { status: 500 });
+    }
+
+    // Verificar que el solicitante sea admin
+    const authorization = request.headers.get('Authorization');
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const idToken = authorization.split('Bearer ')[1];
+
+    const decodedToken = await auth.verifyIdToken(idToken);
+    if (decodedToken.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 });
     }
 
     // Obtener todos los usuarios (limitado a 1000 para evitar timeouts)

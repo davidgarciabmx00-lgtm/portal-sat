@@ -15,6 +15,14 @@ interface Task {
 
 export async function GET(request: NextRequest) {
   try {
+    // Verificar autenticación
+    const authorization = request.headers.get('Authorization');
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const idToken = authorization.split('Bearer ')[1];
+    await auth.verifyIdToken(idToken); // Verificar que el token sea válido
+
     const { searchParams } = new URL(request.url);
     const technicianId = searchParams.get('technicianId');
     const weekStart = searchParams.get('weekStart');

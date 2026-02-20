@@ -46,7 +46,14 @@ const CalendarSidebar = ({ isCollapsed }: CalendarSidebarProps) => {
 
   const fetchTechnicians = async () => {
     try {
-      const response = await fetch('/api/technicians');
+      const token = await user?.getIdToken();
+      if (!token) return;
+      
+      const response = await fetch('/api/technicians', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setTechnicians(data);
