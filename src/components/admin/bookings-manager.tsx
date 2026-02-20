@@ -2,8 +2,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, getDocs, query, orderBy, where, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 interface Booking {
   id: string;
@@ -16,10 +14,20 @@ interface Booking {
   endDateTime: any;
   status: string;
   createdAt: any;
+  htmlLink?: string;
+  technicianId?: string;
+  technicianName?: string;
+}
+
+interface Technician {
+  id: string;
+  name: string;
+  city: string;
 }
 
 const BookingsManager = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('upcoming');
   const { user } = useAuth();
@@ -27,52 +35,83 @@ const BookingsManager = () => {
   useEffect(() => {
     if (user) {
       fetchBookings();
+      fetchTechnicians();
     }
   }, [user, filter]);
 
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const bookingsRef = collection(db, 'bookings');
-      let q;
-
-      const now = Timestamp.now();
-
-      if (filter === 'upcoming') {
-        q = query(
-          bookingsRef,
-          where('startDateTime', '>=', now),
-          orderBy('startDateTime', 'asc')
-        );
-      } else if (filter === 'past') {
-        q = query(
-          bookingsRef,
-          where('startDateTime', '<', now),
-          orderBy('startDateTime', 'desc')
-        );
-      } else {
-        q = query(bookingsRef, orderBy('startDateTime', 'desc'));
-      }
-
-      const snapshot = await getDocs(q);
-      const bookingsData: Booking[] = [];
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        bookingsData.push({
-          id: doc.id,
-          ...data,
-          startDateTime: data.startDateTime?.toDate() || new Date(data.startDateTime),
-          endDateTime: data.endDateTime?.toDate() || new Date(data.endDateTime),
-          createdAt: data.createdAt?.toDate() || new Date(data.createdAt),
-        } as Booking);
+      const token = await user?.getIdToken();
+      
+      const response = await fetch(`/api/booking/events?filter=${filter}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
-      setBookings(bookingsData);
+      if (!response.ok) {
+        throw new Error('Error al obtener eventos');
+      }
+
+      const data = await response.json();
+      setBookings(data.events || []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTechnicians = async () => {
+    try {
+      const token = await user?.getIdToken();
+      if (!token) return;
+
+      const response = await fetch('/api/technicians', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTechnicians(data);
+      }
+    } catch (error) {
+      console.error('Error fetching technicians:', error);
+    }
+  };
+
+  const handleAssignTechnician = async (eventId: string, technicianId: string) => {
+    try {
+      const token = await user?.getIdToken();
+      if (!token) return;
+
+      const technician = technicians.find(t => t.id === technicianId);
+      if (!technician) return;
+
+      const response = await fetch(`/api/booking/events/${eventId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          technicianId,
+          technicianName: technician.name,
+        }),
+      });
+
+      if (response.ok) {
+        // Recargar eventos
+        fetchBookings();
+      } else {
+        alert('Error al asignar técnico');
+      }
+    } catch (error) {
+      console.error('Error assigning technician:', error);
+      alert('Error al asignar técnico');
     }
   };
 
@@ -123,6 +162,14 @@ const BookingsManager = () => {
           >
             Todas
           </button>
+          <button
+            onClick={fetchBookings}
+            disabled={loading}
+            className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+            title="Recargar eventos"
+          >
+            🔄
+          </button>
         </div>
       </div>
 
@@ -165,6 +212,34 @@ const BookingsManager = () => {
                         {booking.description}
                       </p>
                     )}
+                    {booking.technicianName ? (
+                      <p className="mt-2">
+                        <span className="font-medium">👨‍🔧 Técnico Asignado:</span>{' '}
+                        <span className="font-semibold text-green-700">{booking.technicianName}</span>
+                      </p>
+                    ) : (
+                      <div className="mt-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Asignar Técnico:
+                        </label>
+                        <select
+                          className="w-full max-w-xs px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
+                          value={booking.technicianId || ''}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              handleAssignTechnician(booking.googleEventId, e.target.value);
+                            }
+                          }}
+                        >
+                          <option value="">Seleccionar técnico...</option>
+                          {technicians.map(tech => (
+                            <option key={tech.id} value={tech.id}>
+                              {tech.name} - {tech.city}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -182,7 +257,7 @@ const BookingsManager = () => {
                   </span>
                   
                   <a
-                    href={`https://calendar.google.com/calendar/u/0/r/eventedit/${booking.googleEventId}`}
+                    href={booking.htmlLink || `https://calendar.google.com/calendar/u/0/r/eventedit/${booking.googleEventId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 text-sm"

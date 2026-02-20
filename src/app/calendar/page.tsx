@@ -24,10 +24,25 @@ interface Task {
   links: string[];
 }
 
+interface CalendarEvent {
+  id: string;
+  googleEventId: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  description: string;
+  startDateTime: string;
+  endDateTime: string;
+  status: string;
+  technicianId?: string;
+  technicianName?: string;
+}
+
 export default function CalendarPage() {
   const { user, userRole } = useAuth();
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedTechnician, setSelectedTechnician] = useState<string>('');
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -39,6 +54,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetchTasks(currentWeekStart);
+    fetchEvents();
   }, [currentWeekStart, selectedTechnician]);
 
   const fetchTechnicians = async () => {
@@ -82,6 +98,65 @@ export default function CalendarPage() {
     }
   };
 
+  const fetchEvents = async () => {
+    try {
+      const token = await user?.getIdToken();
+      if (!token) return;
+
+      const response = await fetch('/api/booking/events?filter=all', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Filtrar por técnico si está seleccionado
+        let filteredEvents = data.events || [];
+        if (selectedTechnician) {
+          filteredEvents = filteredEvents.filter((event: CalendarEvent) => 
+            event.technicianId === selectedTechnician
+          );
+        }
+        setEvents(filteredEvents);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
+  const handleAssignTechnician = async (eventId: string, technicianId: string) => {
+    try {
+      const token = await user?.getIdToken();
+      if (!token) return;
+
+      const technician = technicians.find(t => t.id === technicianId);
+      if (!technician) return;
+
+      const response = await fetch(`/api/booking/events/${eventId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          technicianId,
+          technicianName: technician.name,
+        }),
+      });
+
+      if (response.ok) {
+        // Recargar eventos
+        fetchEvents();
+      } else {
+        alert('Error al asignar técnico');
+      }
+    } catch (error) {
+      console.error('Error assigning technician:', error);
+      alert('Error al asignar técnico');
+    }
+  };
+
   const handleWeekChange = (weekStart: string) => {
     setCurrentWeekStart(weekStart);
   };
@@ -92,6 +167,7 @@ export default function CalendarPage() {
 
   const handleTaskCreated = () => {
     fetchTasks(currentWeekStart);
+    fetchEvents();
   };
 
   if (loading) {
@@ -101,7 +177,7 @@ export default function CalendarPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <h1 className="text-2xl font-bold">Calendario de Tareas</h1>
+        <h1 className="text-2xl font-bold">Calendario de Tareas y Reservas</h1>
 
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           <div className="min-w-0 flex-1 sm:flex-initial">
@@ -131,7 +207,14 @@ export default function CalendarPage() {
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <WeeklyCalendar tasks={tasks} onWeekChange={handleWeekChange} onTaskDeleted={handleTaskDeleted} />
+        <WeeklyCalendar 
+          tasks={tasks} 
+          events={events}
+          technicians={technicians}
+          onWeekChange={handleWeekChange} 
+          onTaskDeleted={handleTaskDeleted}
+          onAssignTechnician={handleAssignTechnician}
+        />
       </div>
 
       {isTaskFormOpen && (
